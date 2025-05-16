@@ -1,135 +1,90 @@
 ﻿import pandas as pd
 import numpy as np
 import pickle
-import xgboost as xgb
-from sklearn.preprocessing import StandardScaler
 import os
 
+# === Set the default model to load here ===
+# Options: "ensemble" (Voting ensemble), "logreg" (Logistic Regression only)
+DEFAULT_MODEL_NAME = "ensemble"
+
+MODEL_PATHS = {
+    "ensemble": "models/saved_models/ensemble_model.pkl",
+    "logreg": "models/saved_models/logreg_model.pkl" # This works if you saved one separately
+}
+
 class HeartRiskModel:
-    def __init__(self, model_path='models/saved_models/xgb_model.pkl'):
-        self.model_path = model_path
+    def __init__(self, model_name=DEFAULT_MODEL_NAME):
+        self.model_name = model_name
         self.model = None
         self.scaler = None
         self.features = None
         self.feature_mapping = None
+        self.imputer = None
         self.load_model()
-    
+
     def load_model(self):
-        """Load the trained model and scaler"""
-        try:
-            if os.path.exists(self.model_path):
-                print(f"Loading model from {self.model_path}")
-                with open(self.model_path, 'rb') as f:
-                    saved_data = pickle.load(f)
-                    self.model = saved_data['model']
-                    self.scaler = saved_data['scaler']
-                    self.features = saved_data.get('features', None)
-                    self.feature_mapping = saved_data.get('feature_mapping', {})
-                    
-                print("Model loaded successfully!")
-                if 'metrics' in saved_data:
-                    print(f"Model metrics: Accuracy={saved_data['metrics']['accuracy']:.4f}, AUC={saved_data['metrics']['auc']:.4f}")
-            else:
-                print(f"Warning: Model file not found at {self.model_path}. Using fallback model.")
-                self._create_fallback_model()
-        except Exception as e:
-            print(f"Error loading model: {e}")
-            self._create_fallback_model()
-    
-    def _create_fallback_model(self):
-        """Create a simple fallback model for demo purposes"""
-        print("Creating fallback model and scaler")
-        # Create a simple XGBoost model
-        self.model = xgb.XGBClassifier(n_estimators=10)
-        
-        # Create and fit a scaler with dummy data
-        self.scaler = StandardScaler()
-        dummy_data = np.random.randn(100, 11)  # 11 features as expected by the model
-        self.scaler.fit(dummy_data)
-        
-        # Default features (using original Framingham dataset column names)
-        self.features = [
-            'age', 'male', 'totChol', 'hdl_cholesterol', 'sysBP', 
-            'currentSmoker', 'diabetes', 'BPMeds', 'BMI', 'age_squared', 'chol_hdl_ratio'
-        ]
-        
-        # Default feature mapping
-        self.feature_mapping = {
-            'male': 'gender_numeric',
-            'totChol': 'total_cholesterol',
-            'sysBP': 'systolic_bp',
-            'currentSmoker': 'smoker',
-            'BPMeds': 'bp_treatment',
-            'BMI': 'bmi'
-        }
-        
-        # Set up model with dummy predict_proba method
-        self.model.predict_proba = lambda x: np.array([[0.85, 0.15]] * len(x))
-    
-    def preprocess_data(self, user_data):
-        """Preprocess the input data for the model"""
-        # Create a DataFrame with the user data
+        model_path = MODEL_PATHS[self.model_name]
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Model file not found: {model_path}")
+        print(f"Loading model from {model_path}")
+        with open(model_path, "rb") as f:
+            data = pickle.load(f)
+            self.model = data["model"]
+            self.scaler = data["scaler"]
+            self.features = data["features"]
+            self.feature_mapping = data.get("feature_mapping", {})
+            self.imputer = data.get("imputer", None)
+        print(f"Model ({self.model_name}) loaded successfully.")
+
+    def preprocess_user_data(self, user_data: dict):
+        """
+        Accepts a dict of user input. Returns processed features ready for model prediction.
+        Missing values will be imputed as in training.
+        """
         data = pd.DataFrame([user_data])
-        
-        # Map from UI field names to dataset field names
-        data_for_model = pd.DataFrame()
-        
-        # Map gender to 'male' (1 for Male, 0 for Female)
-        data_for_model['male'] = [1 if user_data['gender'] == 'Male' else 0]
-        
-        # Map other fields according to the feature mapping
-        # Direct mappings
-        data_for_model['age'] = data['age']
-        data_for_model['diabetes'] = data['diabetes'].astype(int)
-        
-        # Mapped fields
-        data_for_model['totChol'] = data['total_cholesterol']
-        data_for_model['sysBP'] = data['systolic_bp']
-        data_for_model['currentSmoker'] = data['smoker'].astype(int)
-        data_for_model['BPMeds'] = data['bp_treatment'].astype(int)
-        data_for_model['BMI'] = data['bmi']
-        
-        # Calculate derived features
-        data_for_model['age_squared'] = data_for_model['age'] ** 2
-        data_for_model['hdl_cholesterol'] = data_for_model['totChol'] * 0.25  # Estimate HDL
-        data_for_model['chol_hdl_ratio'] = data_for_model['totChol'] / data_for_model['hdl_cholesterol']
-        
-        # Select features used by the model
-        if self.features:
-            X = data_for_model[self.features].values
+        # Map/cast all relevant fields as float, except those already int
+        for k in ['age', 'total_cholesterol', 'systolic_bp', 'bmi', 'hdl_cholesterol', 'weight', 'height']:
+            if k in data.columns:
+                data[k] = data[k].astype(float)
+        # Map to expected model columns
+        df = pd.DataFrame()
+        df['age'] = data['age']
+        df['male'] = [1 if user_data.get('gender', 'Male') == 'Male' else 0]
+        df['totChol'] = data['total_cholesterol']
+        df['sysBP'] = data['systolic_bp']
+        df['currentSmoker'] = [int(user_data.get('smoker', 0))]
+        df['diabetes'] = [int(user_data.get('diabetes', 0))]
+        df['BPMeds'] = [int(user_data.get('bp_treatment', 0))]
+        df['BMI'] = data['bmi']
+        df['age_squared'] = df['age'] ** 2
+        if 'hdl_cholesterol' in user_data:
+            df['hdl_cholesterol'] = data['hdl_cholesterol']
         else:
-            # Fallback feature list if not loaded with model
-            X = data_for_model[[
-                'age', 'male', 'totChol', 'hdl_cholesterol', 'sysBP', 
-                'currentSmoker', 'diabetes', 'BPMeds', 'BMI', 'age_squared', 'chol_hdl_ratio'
-            ]].values
-        
-        # Scale features
-        if self.scaler:
-            X = self.scaler.transform(X)
-        
-        return X
-    
+            df['hdl_cholesterol'] = df['totChol'] * 0.25
+        df['chol_hdl_ratio'] = df['totChol'] / np.maximum(df['hdl_cholesterol'], 1)
+        # Select feature columns
+        df = df[self.features]
+        # Impute missing if needed
+        if self.imputer is not None:
+            df = pd.DataFrame(self.imputer.transform(df), columns=self.features)
+        # Scale
+        df_scaled = self.scaler.transform(df)
+        return df_scaled
+
     def predict_risk(self, user_data):
-        """Predict 10-year cardiovascular risk for a user"""
-        X = self.preprocess_data(user_data)
-        
-        # Predict using XGBoost model
-        risk_probability = self.model.predict_proba(X)[0, 1]  # Probability of class 1 (has CVD risk)
-        
-        # Convert to percentage
-        risk_percentage = risk_probability * 100
-        
-        # Get risk category
-        risk_category = self.get_risk_category(risk_percentage)
-        
+        """
+        Predicts CVD risk given dict of user data. Returns probability, percentage, risk class.
+        """
+        X = self.preprocess_user_data(user_data)
+        proba = self.model.predict_proba(X)[0, 1] * 100  # Probability (%) for CHD=1
+        risk_category = self.get_risk_category(proba)
         return {
-            'risk_percentage': risk_percentage,
-            'risk_category': risk_category
+            "risk_percentage": proba,
+            "risk_category": risk_category
         }
-    
+
     def get_risk_category(self, risk_percentage):
-        """Categorize risk level based on percentage"""
+        # You can adjust thresholds as you like!
         if risk_percentage < 5:
             return "Low Risk"
         elif risk_percentage < 10:
@@ -139,11 +94,10 @@ class HeartRiskModel:
         else:
             return "Very High Risk"
 
-# Singleton instance
+# Singleton loader
 _model_instance = None
-
-def get_model():
+def get_model(model_name=None):
     global _model_instance
-    if _model_instance is None:
-        _model_instance = HeartRiskModel()
+    if _model_instance is None or (model_name and _model_instance.model_name != model_name):
+        _model_instance = HeartRiskModel(model_name if model_name else DEFAULT_MODEL_NAME)
     return _model_instance
