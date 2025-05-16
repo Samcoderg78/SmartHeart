@@ -1,0 +1,140 @@
+/* Sakura-themed CSS for SmartHeart */
+
+/* Global styles */
+.stApp {
+    background-image: url('assets/images/sakura.jpg');
+    background-size: 200px;
+    background-repeat: repeat;
+    background-attachment: fixed;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Add a semi-transparent white overlay to improve readability */
+div.appview-container {
+    background-color: rgba(255, 255, 255, 0.85);
+}
+
+/* Heading styles */
+h1, h2, h3 {
+    color: #FF69B4 !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+/* Button styles */
+.stButton > button {
+    background-color: #FF69B4 !important;
+    color: white !important;
+    border-radius: 20px !important;
+    border: none !important;
+    padding: 0.5rem 1rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.stButton > button:hover {
+    background-color: #FF1493 !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Sidebar */
+.css-1d391kg, .css-12oz5g7 {
+    background-color: rgba(255, 245, 250, 0.9) !important;
+    border-right: 1px solid #FFB6C1 !important;
+}
+
+/* Custom styling for risk categories */
+.low-risk {
+    background-color: #2ECC71;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.moderate-risk {
+    background-color: #F39C12;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.high-risk {
+    background-color: #E67E22;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.very-high-risk {
+    background-color: #E74C3C;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+/* Tabs styling */
+.stTabs [data-baseweb="tab-list"] {
+    background-color: #FFF5FA;
+    border-radius: 10px 10px 0 0;
+}
+
+.stTabs [data-baseweb="tab"] {
+    color: #FF69B4 !important;
+    font-weight: bold;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: #FFD6E7 !important;
+    color: #FF1493 !important;
+}
+
+/* Cards and containers */
+div.stBlock {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid #FF69B4;
+}
+
+/* Slider colors */
+div.stSlider > div[data-baseweb="slider"] > div[data-testid="stThumbValue"] {
+    background-color: #FF69B4 !important;
+}
+
+/* Form input fields */
+input, textarea, [data-baseweb="input"] {
+    border-radius: 8px !important;
+    border-color: #FFB6C1 !important;
+}
+
+/* Sakura cherry blossom loader */
+.stSpinner > div {
+    border-color: #FF69B4 transparent transparent transparent !important;
+}
+
+/* Metrics display */
+[data-testid="stMetricValue"] {
+    color: #FF69B4 !important;
+    font-weight: bold !important;
+}
+
+/* Plotly chart background */
+.js-plotly-plot {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Table styling */
+.stTable {
+    border: 1px solid #FFD6E7 !important;
+}
+
+.stDataFrame tbody tr:nth-child(odd) {
+    background-color: #FFF5FA !important;
+}
+
+.stDataFrame th {
+    background-color: #FF69B4 !important;
+    color: white !important;
+}
