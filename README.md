@@ -41,10 +41,9 @@ streamlit run app.py
 
 ## 🧪 Model Training (Optional: If You Want to Retrain)
 
-Train inside Docker for full reproducibility:
+Train model
 
-```bash
-docker run -it --rm -v "${PWD}:/app" smartheartapp /bin/bash
+```
 python models/train_model.py
 exit
 ```
