@@ -39,6 +39,11 @@ streamlit run app.py
 
 ---
 
+
+or You can directly run the app by clicking on this link:
+https://samcoderg78-smartheart-app-y5agnb.streamlit.app/
+
+
 ## 🧪 Model Training (Optional: If You Want to Retrain)
 
 Train model
