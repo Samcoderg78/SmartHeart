@@ -29,7 +29,7 @@ mkdir -p data
 mv framingham.csv data/framingham.csv
 ```
 
-3.## 🛠️ Developer: Local Setup
+### 3. 🛠️ Developer: Local Setup
 
 ```bash
 # (Recommended: create a virtual environment)
