@@ -1,11 +1,9 @@
 ﻿import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from models.risk_model import get_model
 from utils.explainer import get_explainer
 from utils.translator import translate_text
-import shap
 
 def render_lifestyle_simulator(user_data, language):
     st.header(translate_text("Lifestyle Intervention Simulator", language))
@@ -103,18 +101,32 @@ def render_lifestyle_simulator(user_data, language):
     )
     st.write(translate_text(f"Risk Category: {new_risk['risk_category']}", language))
 
-    # --- SHAP Explanation ---
-    with st.expander(translate_text("Why did my risk change?", language)):
+    # --- Written Explanation Instead of SHAP Graph ---
+    with st.expander(translate_text("Why did my risk change? (Written Explanation)", language)):
         try:
-            shap_values = explainer.get_shap_values(simulated_data)
-            feature_names = model.features
-            st.write(translate_text("Feature impact on NEW simulated risk:", language))
-            fig, ax = plt.subplots(figsize=(8, 4))
-            shap.summary_plot(shap_values, np.array([explainer.risk_model.preprocess_user_data(simulated_data)[0]]), 
-                              feature_names=feature_names, show=False)
-            st.pyplot(fig)
+            explanations = explainer.generate_lifestyle_explanation(user_data, simulated_data, language)
+            
+            if explanations:
+                st.write(translate_text("Here's how your lifestyle changes affect your heart disease risk:", language))
+                st.markdown("---")
+                
+                for explanation in explanations:
+                    st.markdown(explanation)
+                    st.markdown("")
+                
+                # Additional insights
+                st.markdown("---")
+                st.markdown("**💡 Key Insights:**")
+                st.markdown("• **Immediate Impact:** Some changes like quitting smoking show benefits quickly")
+                st.markdown("• **Long-term Benefits:** Weight loss and cholesterol management provide sustained risk reduction")
+                st.markdown("• **Combined Effects:** Multiple positive changes work together for greater impact")
+                st.markdown("• **Medical Consultation:** Always discuss significant lifestyle changes with your healthcare provider")
+                
+            else:
+                st.info(translate_text("No significant changes detected in your risk factors. Try adjusting the sliders to see how different lifestyle choices affect your risk.", language))
+                
         except Exception as e:
-            st.info(translate_text(f"Could not generate SHAP explanation: {e}", language))
+            st.info(translate_text(f"Could not generate explanation: {e}", language))
 
     st.markdown(translate_text(
         "Experiment with the sliders and checkboxes to see how your heart risk changes with different health decisions!", language
