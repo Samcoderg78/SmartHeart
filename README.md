@@ -10,7 +10,7 @@
 
 ---
 
-## 🚀 Quickstart (Using Docker)
+## 🚀 Quickstart 
 
 ### 1. Clone the Repository
 
@@ -29,23 +29,7 @@ mkdir -p data
 mv framingham.csv data/framingham.csv
 ```
 
-### 3. Build the Docker Image
-
-```bash
-docker build -t smartheartapp .
-```
-
-### 4. Run the App
-
-```bash
-docker run -p 8501:8501 smartheartapp
-```
-
-Open your browser and navigate to [http://localhost:8501](http://localhost:8501)
-
----
-
-## 🛠️ Developer: Local Setup
+### 3. 🛠️ Developer: Local Setup
 
 ```bash
 # (Recommended: create a virtual environment)
@@ -55,19 +39,23 @@ streamlit run app.py
 
 ---
 
+
+or You can directly run the app by clicking on this link:
+https://samcoderg78-smartheart-app-y5agnb.streamlit.app/
+
+
 ## 🧪 Model Training (Optional: If You Want to Retrain)
 
-Train inside Docker for full reproducibility:
+Train model
 
-```bash
-docker run -it --rm -v "${PWD}:/app" smartheartapp /bin/bash
+```
 python models/train_model.py
 exit
 ```
 
 The trained model will be saved to:
 `models/saved_models/ensemble_model.pkl`
-Rebuild the Docker image if needed.
+
 
 ---
 
@@ -104,7 +92,5 @@ Rebuild the Docker image if needed.
 ├── data/
 │   └── framingham.csv
 ├── requirements.txt
-├── requirements.docker.txt
-├── Dockerfile
 └── README.md
 ```
